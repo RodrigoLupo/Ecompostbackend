@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from django.db.models.functions import TruncMonth
 from django.contrib.auth.models import User
 from rest_framework import status, generics
 from rest_framework.response import Response
@@ -7,6 +7,59 @@ from rest_framework.decorators import api_view
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Proveedor, Cliente, Producto, Transaccion, KiloProveedor,Configuracion,ServoMotorState,SensorData
 from .serializers import ConfiguracionSerializer,ProveedorSerializer, ClienteSerializer, ProductoSerializer, TransaccionSerializer, KiloProveedorSerializer, UserSerializer, ServoSerializer,SensorSerializer
+from django.db.models import Sum
+@api_view(['GET'])
+def canjes_por_proveedor(request):
+    user = request.user
+    try:
+        proveedor = Proveedor.objects.get(user=user)
+        transacciones = Transaccion.objects.filter(proveedor=proveedor)
+        
+        response_data = []
+        for transaccion in transacciones:
+            producto = transaccion.producto
+            imagen_url = request.build_absolute_uri(producto.imagen.url) if producto.imagen else None
+            transaccion_data = {
+                "id": transaccion.id,
+                "proveedor": transaccion.proveedor.id,
+                "producto": {
+                    "id": producto.id,
+                    "nombre": producto.nombre,
+                    "descripcion": producto.descripcion,
+                    "precio": str(producto.precio),
+                    "puntos_requeridos": producto.puntos_requeridos,
+                    "tipo": producto.tipo,
+                    "imagen": imagen_url
+                },
+                "cantidad": transaccion.cantidad,
+                "puntos_utilizados": transaccion.puntos_utilizados,
+                "tipo": transaccion.tipo
+            }
+            response_data.append(transaccion_data)
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+    except Proveedor.DoesNotExist:
+        return Response({'error': 'Proveedor no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def kilos_intercambiados(request):
+    user = request.user
+    try:
+        proveedor = Proveedor.objects.get(user=user)
+        kilos = KiloProveedor.objects.filter(proveedor=proveedor)
+        kilos_by_month = kilos.annotate(month=TruncMonth('fecha')).values('month').annotate(total_kilos=Sum('kilos')).order_by('month')
+        
+        response_data = []
+        for entry in kilos_by_month:
+            response_data.append({
+                'month': entry['month'].strftime('%Y-%m'),
+                'total_kilos': entry['total_kilos']
+            })
+
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Proveedor.DoesNotExist:
+        return Response({'error': 'Proveedor no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 def register(request):

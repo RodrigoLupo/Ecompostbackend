@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import sensor_data_detail, servo_motor_state_detail,login_user,configuracion_detail,TransaccionesList,kilos_list_create,TransaccionDetail,KiloDetail,update_user,UserList,UserDetail,register, login, ProveedorList, ClienteList, ProductoList, canjear_puntos, consultar_puntos, register_proveedor, proveedor_profile, ProveedorDetail, ClienteDetail, ProductoDetail
+from .views import canjes_por_proveedor, kilos_intercambiados,sensor_data_detail, servo_motor_state_detail,login_user,configuracion_detail,TransaccionesList,kilos_list_create,TransaccionDetail,KiloDetail,update_user,UserList,UserDetail,register, login, ProveedorList, ClienteList, ProductoList, canjear_puntos, consultar_puntos, register_proveedor, proveedor_profile, ProveedorDetail, ClienteDetail, ProductoDetail
 
 urlpatterns = [
     path('register/', register),
@@ -25,4 +25,6 @@ urlpatterns = [
     path('configuracion/', configuracion_detail, name='configuracion'),
     path('sensor_data/', sensor_data_detail, name='sensor_data_detail'),
     path('servo_motor_state/', servo_motor_state_detail, name='servo_motor_state_detail'),
+    path('canjes_por_proveedor/', canjes_por_proveedor, name='canjes_por_proveedor'),
+    path('kilos_intercambiados/', kilos_intercambiados, name='kilos_intercambiados'),
 ]
